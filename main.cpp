@@ -46,9 +46,9 @@ void average_colors(const vector<Pixel> &pixel_list)
         return;
     }
 
-    double sum_r = 0;
-    double sum_g = 0;
-    double sum_b = 0;
+    double sum_r = 0.0;
+    double sum_g = 0.0;
+    double sum_b = 0.0;
 
     for (size_t i = 0; i < pixel_list.size(); i++)
     {
@@ -57,60 +57,68 @@ void average_colors(const vector<Pixel> &pixel_list)
         sum_b += pixel_list[i].b;
     }
 
-    double n = pixel_list.size();
+    double n = (double)pixel_list.size();
 
-    cout << "average r = " << sum_r / n << endl;
-    cout << "average g = " << sum_g / n << endl;
-    cout << "average b = " << sum_b / n << endl;
+    cout << "average r = " << (sum_r / n) << "\n";
+    cout << "average g = " << (sum_g / n) << "\n";
+    cout << "average b = " << (sum_b / n) << "\n";
 }
 
-void flip_vertically(vector<Pixel> &pixel_list)
+int find_max_y(const vector<Pixel> &pixel_list)
 {
-    int max_x = 0;
     int max_y = 0;
 
     for (size_t i = 0; i < pixel_list.size(); i++)
     {
-        if (pixel_list[i].x > max_x)
-            max_x = pixel_list[i].x;
-
         if (pixel_list[i].y > max_y)
+        {
             max_y = pixel_list[i].y;
+        }
     }
 
-    vector<vector<Pixel>> grid(max_y + 1, vector<Pixel>(max_x + 1));
-    vector<vector<bool>> exists(max_y + 1, vector<bool>(max_x + 1, false));
+    return max_y;
+}
+
+int find_pixel_index(const vector<Pixel> &pixel_list, int x, int y)
+{
+    for (size_t i = 0; i < pixel_list.size(); i++)
+    {
+        if (pixel_list[i].x == x && pixel_list[i].y == y)
+        {
+            return (int)i;
+        }
+    }
+
+    return -1;
+}
+
+void flip_vertically(vector<Pixel> &pixel_list)
+{
+    if (pixel_list.size() == 0)
+    {
+        return;
+    }
+
+    int max_y = find_max_y(pixel_list);
+
+    vector<Pixel> original = pixel_list;
 
     for (size_t i = 0; i < pixel_list.size(); i++)
     {
-        int x = pixel_list[i].x;
-        int y = pixel_list[i].y;
+        int x = original[i].x;
+        int y = original[i].y;
 
-        grid[y][x] = pixel_list[i];
-        exists[y][x] = true;
-    }
-
-    vector<Pixel> result;
-
-    for (size_t i = 0; i < pixel_list.size(); i++)
-    {
-        Pixel p = pixel_list[i];
-
-        int x = p.x;
-        int y = p.y;
         int mirror_y = max_y - y;
 
-        if (exists[mirror_y][x])
+        int j = find_pixel_index(original, x, mirror_y);
+
+        if (j != -1)
         {
-            p.r = grid[mirror_y][x].r;
-            p.g = grid[mirror_y][x].g;
-            p.b = grid[mirror_y][x].b;
+            pixel_list[i].r = original[j].r;
+            pixel_list[i].g = original[j].g;
+            pixel_list[i].b = original[j].b;
         }
-
-        result.push_back(p);
     }
-
-    pixel_list = result;
 }
 
 int main(int argc, char *argv[])
@@ -126,7 +134,7 @@ int main(int argc, char *argv[])
 
     if (!fin.is_open())
     {
-        cout << "Could not open file\n";
+        cout << "Could not open file: " << filename << "\n";
         return 1;
     }
 
@@ -136,7 +144,9 @@ int main(int argc, char *argv[])
     while (getline(fin, line))
     {
         if (line.size() == 0)
+        {
             continue;
+        }
 
         Pixel p = parse_line(line);
         pixel_list.push_back(p);
@@ -144,7 +154,7 @@ int main(int argc, char *argv[])
 
     fin.close();
 
-    cout << "pixels loaded = " << pixel_list.size() << endl;
+    cout << "pixels loaded = " << pixel_list.size() << "\n";
 
     average_colors(pixel_list);
     flip_vertically(pixel_list);
@@ -153,7 +163,7 @@ int main(int argc, char *argv[])
 
     if (!fout.is_open())
     {
-        cout << "Could not create output file\n";
+        cout << "Could not create flipped.dat\n";
         return 1;
     }
 
@@ -169,6 +179,5 @@ int main(int argc, char *argv[])
     fout.close();
 
     cout << "Wrote flipped.dat\n";
-
     return 0;
 }
